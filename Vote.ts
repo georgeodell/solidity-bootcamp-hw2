@@ -5,44 +5,48 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 async function main() {
-    const provider = ethers.getDefaultProvider("goerli");
+  const provider = ethers.getDefaultProvider("goerli", {
+    etherscan: process.env.ETHERSCAN_API_KEY,
+    infura: process.env.INFURA_API_KEY,
+    alchemy: process.env.ALCHEMY_API_KEY
+  });
 
-    const seed = process.env.MNEMONIC;
-    const pKey = process.env.PRIVATE_KEY as string;
+  const seed = process.env.MNEMONIC;
+  const pKey = process.env.PRIVATE_KEY as string;
 
-    // const wallet = ethers.Wallet.fromMnemonic(seed ?? "");
-    const wallet = new ethers.Wallet(pKey);
+  // const wallet = ethers.Wallet.fromMnemonic(seed ?? "");
+  const wallet = new ethers.Wallet(pKey);
 
-    const signer = wallet.connect(provider);
-    const balanceBN = await signer.getBalance();
-    
-    const voterAddress = await signer.getAddress();
+  const signer = wallet.connect(provider);
+  const balanceBN = await signer.getBalance();
+  
+  const voterAddress = await signer.getAddress();
 
-    const args = process.argv;
-    const parameters = args.slice(2);
+  const args = process.argv;
+  const parameters = args.slice(2);
 
-    if (parameters.length <= 0) throw new Error("Not enough arguments");
-    else if (parameters.length > 2) throw new Error("Too many arguments");
+  if (parameters.length <= 0) throw new Error("Not enough arguments");
+  else if (parameters.length > 2) throw new Error("Too many arguments");
 
-    const contractAddress = parameters[0];
-    const proposalIndex = parameters[1];
+  const contractAddress = parameters[0];
+  const proposalIndex = parameters[1];
 
-    console.log("Voting");
-    console.log(`Contract Address: ${contractAddress}`);
-    console.log(`Voter Address: ${voterAddress}`);
-    console.log(`Proposal: ${proposalIndex}`);
+  console.log("Voting");
+  console.log(`Contract Address: ${contractAddress}`);
+  console.log(`Voter Address: ${voterAddress}`);
+  console.log(`Proposal: ${proposalIndex}`);
 
-    const ballotContractFactory = new Ballot__factory(signer);
-    const ballotContract = ballotContractFactory.connect(signer).attach(contractAddress) as Ballot;
+  const ballotContractFactory = new Ballot__factory(signer);
+  const ballotContract = ballotContractFactory.connect(signer).attach(contractAddress) as Ballot;
 
-    await ballotContract.vote(proposalIndex);
+  await ballotContract.vote(proposalIndex, { gasLimit: 10 ** 5 });
 
-    const proposal = await ballotContract.proposals(proposalIndex);
-    const proposalName = ethers.utils.parseBytes32String(proposal.name);
+  const proposal = await ballotContract.proposals(proposalIndex);
+  const proposalName = ethers.utils.parseBytes32String(proposal.name);
 
-    console.log(
-        `${voterAddress} voted for ${proposalName}`
-    );
+  console.log(
+    `${voterAddress} voted for ${proposalName}`
+  );
 }
 
 main().catch((error) => {

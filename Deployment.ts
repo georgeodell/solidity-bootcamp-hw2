@@ -5,7 +5,11 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 async function main() {
-    const provider = ethers.getDefaultProvider("goerli");
+    const provider = ethers.getDefaultProvider("goerli", {
+        etherscan: process.env.ETHERSCAN_API_KEY,
+        infura: process.env.INFURA_API_KEY,
+        alchemy: process.env.ALCHEMY_API_KEY
+    });
 
     const seed = process.env.MNEMONIC;
     const pKey = process.env.PRIVATE_KEY as string;
@@ -37,6 +41,6 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
+    console.error(error);
+    process.exitCode = 1;
 });
